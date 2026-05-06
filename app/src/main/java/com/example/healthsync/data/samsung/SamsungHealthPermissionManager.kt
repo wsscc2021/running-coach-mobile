@@ -1,28 +1,32 @@
 package com.example.healthsync.data.samsung
 
 import android.app.Activity
+import com.samsung.android.sdk.healthdata.HealthConstants
+import com.samsung.android.sdk.healthdata.HealthPermissionManager
+import com.samsung.android.sdk.healthdata.HealthPermissionManager.PermissionKey
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Wraps Samsung Health permission requests.
- * Replace the stubs with SDK PermissionKey + HealthPermissionManager calls.
- * Stub behaviour: hasPermissions() returns false so the UI shows the grant screen;
- * requestPermissions() grants immediately so the full nav flow can be tested without the SDK.
- */
 @Singleton
-class SamsungHealthPermissionManager @Inject constructor() {
-
-    private val requiredDataTypes = listOf("HeartRate", "StepCount", "Sleep", "Exercise")
+class SamsungHealthPermissionManager @Inject constructor(
+    private val client: SamsungHealthClient,
+) {
+    private val requiredPermissions = setOf(
+        PermissionKey(HealthConstants.HeartRate.HEALTH_DATA_TYPE, HealthPermissionManager.PermissionType.READ),
+        PermissionKey(HealthConstants.StepCount.HEALTH_DATA_TYPE, HealthPermissionManager.PermissionType.READ),
+        PermissionKey(HealthConstants.Sleep.HEALTH_DATA_TYPE, HealthPermissionManager.PermissionType.READ),
+        PermissionKey(HealthConstants.Exercise.HEALTH_DATA_TYPE, HealthPermissionManager.PermissionType.READ),
+    )
 
     fun requestPermissions(activity: Activity, onResult: (allGranted: Boolean) -> Unit) {
-        // TODO: build SDK PermissionKey set from requiredDataTypes and call
-        //       HealthPermissionManager(store).requestPermissions(keys, activity).setResultListener { ... }
-        onResult(true)
+        HealthPermissionManager(client.requireStore())
+            .requestPermissions(requiredPermissions, activity)
+            .setResultListener { result ->
+                onResult(result.resultMap.all { it.value })
+            }
     }
 
-    fun hasPermissions(): Boolean {
-        // TODO: return HealthPermissionManager(store).isPermissionAcquired(requiredKeys)
-        return false
-    }
+    fun hasPermissions(): Boolean =
+        HealthPermissionManager(client.requireStore())
+            .isPermissionAcquired(requiredPermissions)
 }
