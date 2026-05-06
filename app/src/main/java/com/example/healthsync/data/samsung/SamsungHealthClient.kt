@@ -1,7 +1,6 @@
 package com.example.healthsync.data.samsung
 
 import android.content.Context
-import com.samsung.android.sdk.health.data.HealthDataService
 import com.samsung.android.sdk.health.data.HealthDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -12,7 +11,7 @@ class SamsungHealthClient @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val store: HealthDataStore by lazy {
-        HealthDataService.getStore(context)
+        HealthDataStore.getStore(context)
     }
 
     fun requireStore(): HealthDataStore = store

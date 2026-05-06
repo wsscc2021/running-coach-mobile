@@ -1,18 +1,18 @@
 package com.example.healthsync.ui.health
 
 import android.app.Activity
-import com.example.healthsync.data.samsung.SamsungHealthClient
 import com.example.healthsync.data.samsung.SamsungHealthPermissionManager
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PermissionViewModel @Inject constructor(
-    private val client: SamsungHealthClient,
     private val permissionManager: SamsungHealthPermissionManager,
 ) : ViewModel() {
 
@@ -27,29 +27,28 @@ class PermissionViewModel @Inject constructor(
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
-        connect()
+        checkPermissions()
     }
 
-    fun connect() {
+    fun checkPermissions() {
         _state.value = State.Connecting
-        client.connect(
-            onConnected = {
+        viewModelScope.launch {
+            try {
                 _state.value = if (permissionManager.hasPermissions()) State.Granted else State.NeedsPermission
-            },
-            onError = { e ->
+            } catch (e: Exception) {
                 _state.value = State.Error(e.message ?: "Failed to connect to Samsung Health")
-            },
-        )
-    }
-
-    fun requestPermissions(activity: Activity) {
-        permissionManager.requestPermissions(activity) { granted ->
-            _state.value = if (granted) State.Granted else State.NeedsPermission
+            }
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        client.disconnect()
+    fun requestPermissions(activity: Activity) {
+        viewModelScope.launch {
+            try {
+                val granted = permissionManager.requestPermissions(activity)
+                _state.value = if (granted) State.Granted else State.NeedsPermission
+            } catch (e: Exception) {
+                _state.value = State.Error(e.message ?: "Permission request failed")
+            }
+        }
     }
 }
