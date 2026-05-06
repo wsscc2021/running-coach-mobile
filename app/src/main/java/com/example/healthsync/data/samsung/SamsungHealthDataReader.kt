@@ -1,25 +1,30 @@
 package com.example.healthsync.data.samsung
 
+import com.samsung.android.sdk.health.data.data.entries.ExerciseSession
 import com.samsung.android.sdk.health.data.request.DataType
 import com.samsung.android.sdk.health.data.request.DataTypes
-import com.samsung.android.sdk.health.data.request.InstantTimeFilter
+import com.samsung.android.sdk.health.data.request.LocalTimeFilter
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
-import java.time.Instant
 
 @Singleton
 class SamsungHealthDataReader @Inject constructor(
     private val client: SamsungHealthClient,
 ) {
-    private fun instantTimeFilter(startTime: Long, endTime: Long) =
-        InstantTimeFilter.of(
-            Instant.ofEpochMilli(startTime),
-            Instant.ofEpochMilli(endTime)
+    private fun timeFilter(startTime: Long, endTime: Long): LocalTimeFilter {
+        val zoneId = ZoneId.systemDefault()
+
+        return LocalTimeFilter.of(
+            Instant.ofEpochMilli(startTime).atZone(zoneId).toLocalDateTime(),
+            Instant.ofEpochMilli(endTime).atZone(zoneId).toLocalDateTime(),
         )
+    }
 
     suspend fun readHeartRate(startTime: Long, endTime: Long): List<Map<String, Any>> {
         val request = DataTypes.HEART_RATE.readDataRequestBuilder
-            .setInstantTimeFilter(instantTimeFilter(startTime, endTime))
+            .setLocalTimeFilter(timeFilter(startTime, endTime))
             .build()
 
         return client.requireStore().readData(request).dataList.map { data ->
@@ -32,20 +37,27 @@ class SamsungHealthDataReader @Inject constructor(
 
     suspend fun readSteps(startTime: Long, endTime: Long): List<Map<String, Any>> {
         val request = DataType.StepsType.TOTAL.requestBuilder
-            .setInstantTimeFilter(instantTimeFilter(startTime, endTime))
+            .setLocalTimeFilter(timeFilter(startTime, endTime))
             .build()
 
-        return client.requireStore().aggregateData(request).dataList.map { data ->
+        val total = client.requireStore()
+            .aggregateData(request)
+            .dataList
+            .mapNotNull { it.value as? Long }
+            .sum()
+
+        return listOf(
             mapOf(
-                "startTime" to data.startTime.toEpochMilli(),
-                "count" to (data.value ?: 0L),
+                "startTime" to startTime,
+                "endTime" to endTime,
+                "count" to total,
             )
-        }
+        )
     }
 
     suspend fun readSleep(startTime: Long, endTime: Long): List<Map<String, Any>> {
         val request = DataTypes.SLEEP.readDataRequestBuilder
-            .setInstantTimeFilter(instantTimeFilter(startTime, endTime))
+            .setLocalTimeFilter(timeFilter(startTime, endTime))
             .build()
 
         return client.requireStore().readData(request).dataList.map { data ->
@@ -58,26 +70,32 @@ class SamsungHealthDataReader @Inject constructor(
 
     suspend fun readExercise(startTime: Long, endTime: Long): List<Map<String, Any>> {
         val request = DataTypes.EXERCISE.readDataRequestBuilder
-            .setInstantTimeFilter(instantTimeFilter(startTime, endTime))
+            .setLocalTimeFilter(timeFilter(startTime, endTime))
             .build()
 
         return client.requireStore().readData(request).dataList.map { data ->
+            val sessions = data.getValue(DataType.ExerciseType.SESSIONS)
+                ?: emptyList<ExerciseSession>()
+
+            val firstSession = sessions.firstOrNull()
+
             buildMap<String, Any> {
                 put("startTime", data.startTime.toEpochMilli())
                 put("endTime", (data.endTime ?: data.startTime).toEpochMilli())
+
                 put(
                     "exerciseType",
-                    data.getValue(DataType.ExerciseType.EXERCISE_TYPE)?.toString() ?: "unknown"
+                    data.getValue(DataType.ExerciseType.EXERCISE_TYPE)?.toString()
+                        ?: firstSession?.exerciseType?.toString()
+                        ?: "unknown"
                 )
 
-                val calories = data.getValue(DataType.ExerciseType.CALORIES)
-                if (calories != null && calories > 0f) {
-                    put("calorie", calories.toDouble())
-                }
+                firstSession?.let { session ->
+                    put("calorie", session.calories.toDouble())
 
-                val distance = data.getValue(DataType.ExerciseType.DISTANCE)
-                if (distance != null && distance > 0f) {
-                    put("distance", distance.toDouble())
+                    session.distance?.let { distance ->
+                        put("distance", distance.toDouble())
+                    }
                 }
             }
         }
