@@ -71,7 +71,11 @@ fun HealthPermissionScreen(
                             textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.height(16.dp))
-                        OutlinedButton(onClick = viewModel::connect) {
+                        OutlinedButton(
+                            onClick = {
+                                activity?.let { viewModel.requestPermissions(it) }
+                            }
+                        ) {
                             Text("Retry")
                         }
                     }

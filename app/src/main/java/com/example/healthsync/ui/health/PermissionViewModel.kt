@@ -30,11 +30,17 @@ class PermissionViewModel @Inject constructor(
         checkPermissions()
     }
 
+    fun connect() {
+        checkPermissions()
+    }
+
     fun checkPermissions() {
         _state.value = State.Connecting
         viewModelScope.launch {
             try {
-                _state.value = if (permissionManager.hasPermissions()) State.Granted else State.NeedsPermission
+                _state.value =
+                    if (permissionManager.hasPermissions()) State.Granted
+                    else State.NeedsPermission
             } catch (e: Exception) {
                 _state.value = State.Error(e.message ?: "Failed to connect to Samsung Health")
             }
