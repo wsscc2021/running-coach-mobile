@@ -68,7 +68,8 @@ dependencies {
 
     implementation(libs.coroutines.android)
 
-    implementation(libs.samsung.health.data)
+    // Samsung Health SDK: place samsung-health-data-api-1.1.0.aar in android/libs/ then uncomment:
+    implementation(files("../libs/samsung-health-data-api-1.1.0.aar"))
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

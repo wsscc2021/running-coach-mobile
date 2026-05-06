@@ -11,7 +11,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://artifact.samsung.com/artifactory/libs-release") }
+        // Samsung Health SDK (samsung-health-data-api-1.1.0.aar) is not on a public Maven repo.
+        // Place the AAR in android/libs/ and uncomment the implementation line in app/build.gradle.kts
     }
 }
 
