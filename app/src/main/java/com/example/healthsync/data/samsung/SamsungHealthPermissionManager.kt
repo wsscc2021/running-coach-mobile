@@ -6,24 +6,23 @@ import javax.inject.Singleton
 
 /**
  * Wraps Samsung Health permission requests.
- * Replace the TODO stubs with SDK permission API calls from developer.samsung.com/health.
+ * Replace the stubs with SDK PermissionKey + HealthPermissionManager calls.
+ * Stub behaviour: hasPermissions() returns false so the UI shows the grant screen;
+ * requestPermissions() grants immediately so the full nav flow can be tested without the SDK.
  */
 @Singleton
-class SamsungHealthPermissionManager @Inject constructor(
-    private val client: SamsungHealthClient,
-) {
-    // Data types to request; map to SDK PermissionKey constants
-    private val requiredDataTypes = listOf(
-        "HeartRate", "StepCount", "Sleep", "Exercise",
-    )
+class SamsungHealthPermissionManager @Inject constructor() {
+
+    private val requiredDataTypes = listOf("HeartRate", "StepCount", "Sleep", "Exercise")
 
     fun requestPermissions(activity: Activity, onResult: (allGranted: Boolean) -> Unit) {
-        // TODO: build SDK PermissionKey set from requiredDataTypes, call requestPermissions()
-        onResult(false)
+        // TODO: build SDK PermissionKey set from requiredDataTypes and call
+        //       HealthPermissionManager(store).requestPermissions(keys, activity).setResultListener { ... }
+        onResult(true)
     }
 
     fun hasPermissions(): Boolean {
-        // TODO: call SDK isPermissionAcquired()
+        // TODO: return HealthPermissionManager(store).isPermissionAcquired(requiredKeys)
         return false
     }
 }

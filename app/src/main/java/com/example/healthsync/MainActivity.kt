@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.healthsync.ui.health.HealthPermissionScreen
+import com.example.healthsync.ui.navigation.AppNavigation
 import com.example.healthsync.ui.theme.HealthSyncTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HealthSyncTheme {
-                HealthPermissionScreen()
+                AppNavigation()
             }
         }
     }

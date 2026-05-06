@@ -22,8 +22,10 @@ object AppModule {
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "health_sync.db").build()
 
-    @Provides
-    fun provideHeartRateDao(db: AppDatabase) = db.heartRateDao()
+    @Provides fun provideHeartRateDao(db: AppDatabase) = db.heartRateDao()
+    @Provides fun provideStepDao(db: AppDatabase) = db.stepDao()
+    @Provides fun provideSleepDao(db: AppDatabase) = db.sleepDao()
+    @Provides fun provideExerciseDao(db: AppDatabase) = db.exerciseDao()
 
     @Provides
     @Singleton

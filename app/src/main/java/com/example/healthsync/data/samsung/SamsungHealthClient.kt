@@ -7,28 +7,28 @@ import javax.inject.Singleton
 
 /**
  * Manages the connection lifecycle to Samsung Health.
- * Adapt connect() using the SDK's connection API from developer.samsung.com/health.
+ * Replace the stub body of connect() with the real SDK calls from developer.samsung.com/health.
  */
 @Singleton
 class SamsungHealthClient @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    // Replace Any with the SDK's store type (e.g. HealthDataStore)
-    private var store: Any? = null
+    private enum class Status { DISCONNECTED, CONNECTED }
 
-    val isConnected: Boolean get() = store != null
+    private var status = Status.DISCONNECTED
 
     fun connect(onConnected: () -> Unit, onError: (Exception) -> Unit) {
-        // TODO: initialise SDK store and call connectService()
-        // store = HealthDataStore(context, connectionListener)
-        // store?.connectService()
+        if (status == Status.CONNECTED) {
+            onConnected()
+            return
+        }
+        // TODO: replace with real SDK — HealthDataStore(context, connectionListener).connectService()
+        status = Status.CONNECTED
         onConnected()
     }
 
     fun disconnect() {
         // TODO: store?.disconnectService()
-        store = null
+        status = Status.DISCONNECTED
     }
-
-    fun requireStore(): Any = checkNotNull(store) { "Samsung Health store not connected" }
 }
